@@ -1108,7 +1108,7 @@ func Test_autoreconnect(t *testing.T) {
 	ops.AddBroker(FVTTCP)
 	ops.SetClientID("auto_reconnect")
 	ops.SetAutoReconnect(true)
-	ops.SetOnConnectHandler(func(c Client) {
+	ops.SetOnConnectHandler(func(c Client, sessionPresent bool) {
 		t.Log("Connected")
 	})
 	ops.SetKeepAlive(2 * time.Second)

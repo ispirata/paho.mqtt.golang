@@ -22,6 +22,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+
 	// "log"
 	"os"
 	"os/signal"
@@ -62,7 +63,7 @@ func main() {
 	tlsConfig := &tls.Config{InsecureSkipVerify: true, ClientAuth: tls.NoClientCert}
 	connOpts.SetTLSConfig(tlsConfig)
 
-	connOpts.OnConnect = func(c MQTT.Client) {
+	connOpts.OnConnect = func(c MQTT.Client, sessionPresent bool) {
 		if token := c.Subscribe(*topic, byte(*qos), onMessageReceived); token.Wait() && token.Error() != nil {
 			panic(token.Error())
 		}

@@ -48,7 +48,7 @@ type ConnectionLostHandler func(Client, error)
 // OnConnectHandler is a callback that is called when the client
 // state changes from unconnected/disconnected to connected. Both
 // at initial connection and on reconnection
-type OnConnectHandler func(Client)
+type OnConnectHandler func(Client, bool)
 
 // ReconnectHandler is invoked prior to reconnecting after
 // the initial connection is lost

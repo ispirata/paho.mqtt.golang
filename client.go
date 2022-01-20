@@ -297,7 +297,7 @@ func (c *client) Connect() Token {
 			return
 		}
 		inboundFromStore := make(chan packets.ControlPacket) // there may be some inbound comms packets in the store that are awaiting processing
-		if c.startCommsWorkers(conn, inboundFromStore) {
+		if c.startCommsWorkers(conn, t.sessionPresent, inboundFromStore) {
 			// Take care of any messages in the store
 			if !c.options.CleanSession {
 				c.resume(c.options.ResumeSubs, inboundFromStore)
@@ -319,8 +319,9 @@ func (c *client) Connect() Token {
 func (c *client) reconnect() {
 	DEBUG.Println(CLI, "enter reconnect")
 	var (
-		sleep = 1 * time.Second
-		conn  net.Conn
+		sleep          = 1 * time.Second
+		conn           net.Conn
+		sessionPresent bool
 	)
 
 	for {
@@ -328,7 +329,7 @@ func (c *client) reconnect() {
 			c.options.OnReconnecting(c, &c.options)
 		}
 		var err error
-		conn, _, _, err = c.attemptConnection()
+		conn, _, sessionPresent, err = c.attemptConnection()
 		if err == nil {
 			break
 		}
@@ -357,7 +358,7 @@ func (c *client) reconnect() {
 	}
 
 	inboundFromStore := make(chan packets.ControlPacket) // there may be some inbound comms packets in the store that are awaiting processing
-	if c.startCommsWorkers(conn, inboundFromStore) {
+	if c.startCommsWorkers(conn, sessionPresent, inboundFromStore) {
 		c.resume(c.options.ResumeSubs, inboundFromStore)
 	}
 	close(inboundFromStore)
@@ -544,7 +545,7 @@ func (c *client) internalConnLost(err error) {
 // startCommsWorkers is called when the connection is up.
 // It starts off all of the routines needed to process incoming and outgoing messages.
 // Returns true if the comms workers were started (i.e. they were not already running)
-func (c *client) startCommsWorkers(conn net.Conn, inboundFromStore <-chan packets.ControlPacket) bool {
+func (c *client) startCommsWorkers(conn net.Conn, sessionPresent bool, inboundFromStore <-chan packets.ControlPacket) bool {
 	DEBUG.Println(CLI, "startCommsWorkers called")
 	c.connMu.Lock()
 	defer c.connMu.Unlock()
@@ -573,7 +574,7 @@ func (c *client) startCommsWorkers(conn net.Conn, inboundFromStore <-chan packet
 	c.setConnected(connected)
 	DEBUG.Println(CLI, "client is connected/reconnected")
 	if c.options.OnConnect != nil {
-		go c.options.OnConnect(c)
+		go c.options.OnConnect(c, sessionPresent)
 	}
 
 	// c.oboundP and c.obound need to stay active for the life of the client because, depending upon the options,
