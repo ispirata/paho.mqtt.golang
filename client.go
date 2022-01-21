@@ -35,7 +35,7 @@ import (
 
 	"golang.org/x/sync/semaphore"
 
-	"github.com/eclipse/paho.mqtt.golang/packets"
+	"github.com/ispirata/paho.mqtt.golang/packets"
 )
 
 const (
